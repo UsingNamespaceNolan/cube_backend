@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import User
 from rest_framework import status
@@ -27,30 +28,37 @@ class DeckView(APIView):
         user.save()
 
         user_deck_count = Deck.objects.filter(user=user).count()
-        
         if user_deck_count >= USER_DECK_LIMIT:
             return Response({"message": "User deck count at maximum allowed."}, status=status.HTTP_403_FORBIDDEN)
 
+        cards_in_deck = []
         # first create the deck to get a primary key id
         user_deck = Deck(name=request.data['name'], user=user)
-        user_deck.save()
-        logger.info(f'deck {user_deck}')
-        logger.info(f'id {user_deck.id}')
-        logger.info(f'name {user_deck.name}')
+
+        try:
+            user_deck.save()
+        except IntegrityError:
+            return Response({"message": "Deck name already exists!"}, status=status.HTTP_409_CONFLICT)
 
         # then add all the cards in the deck with the new deck id
-        cards_in_deck = [DeckCard(deck=user_deck, scryfall_id=card['id'], name=card['name']) for card in request.data['cards']]
+        found_cards_scryfall_id = set()
+        for card in request.data['cards']:
+            if card['id'] not in found_cards_scryfall_id:
+                cards_in_deck.append(DeckCard(deck=user_deck, scryfall_id=card['id'], name=card['name']))
 
         logger.info(cards_in_deck)
         DeckCard.objects.bulk_create(cards_in_deck)
 
         return Response({"message": "Deck added!"}, status=status.HTTP_201_CREATED)
 
+
+    def get(request):
+        return Response(status=status.HTTP_200_OK)
+
 class RegisterUserView(APIView):
     """
     API endpoint to register a new user.
     """
-    authentication_classes = ([])
     permission_classes = [AllowAny]
     def post(self, request):
         newUserSerializer = NewUserSerializer(data=request.data)
