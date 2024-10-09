@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.exceptions import APIException
 from django.http import HttpResponse, JsonResponse
+from django.core import serializers
 import logging
 
 from cube_app.constants import USER_DECK_LIMIT
@@ -52,8 +53,10 @@ class DeckView(APIView):
         return Response({"message": "Deck added!"}, status=status.HTTP_201_CREATED)
 
 
-    def get(request):
-        return Response(status=status.HTTP_200_OK)
+    def get(self, request):
+        deck_id = request.query_params['id']
+        cards = DeckCard.objects.filter(deck_id=deck_id)
+        return Response(serializers.serialize('json', cards ), status=status.HTTP_200_OK)
 
 class RegisterUserView(APIView):
     """
