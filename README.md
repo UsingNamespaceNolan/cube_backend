@@ -1,8 +1,12 @@
 # cube_backend
 
 ## Prepare the project
+Create two files in the root of the repository, .env and db.sqlite3. In your env file put a secret key:
+```
+DJANGO_SECRET_KEY='your-secret-key'
+```
 
-First create a python virtual environment:
+Create a python virtual environment:
 
 ```shell
 python -m venv .venv
@@ -29,25 +33,24 @@ pip install -r requirements
 Make database migrations:
 
 ```shell
-python manage.py makemigrations
+python manage.py makemigrations --settings=cube_project.settings.base
 ```
 
 Perform the migrations:
 
 ```shell
-python manage.py migrate
+python manage.py migrate --settings=cube_project.settings.base
 ```
 
-For the above two commands, you may need to add this option:
-
-```shell
---settings=cube_project.settings.base
-```
-
-Run the server:
+## Run the server:
 
 ```shell
 python manage.py runserver 8001 --settings=cube_project.settings.local
+```
+
+## In production:
+```shell
+python manage.py runserver 8001 --settings=cube_project.settings.production
 ```
 
 Voila
