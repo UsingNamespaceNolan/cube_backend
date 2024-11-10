@@ -2,6 +2,8 @@ from .base import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+ALLOWED_HOSTS = ['*']
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8081"

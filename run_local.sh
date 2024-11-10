@@ -1,0 +1,1 @@
+python manage.py runserver 8001 --settings=cube_project.settings.local

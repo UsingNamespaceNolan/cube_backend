@@ -1,5 +1,5 @@
 from django.db import IntegrityError
-from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
@@ -14,10 +14,11 @@ import logging
 from cube_app.constants import USER_DECK_LIMIT
 
 from .models import Deck, DeckCard
-from .serializers import NewUserSerializer, UserSerializer
+from .serializers import DeckSerializer, NewUserSerializer
 
 logger = logging.getLogger('cube_app')
 
+# TODO verify request data with forms
 class DeckView(APIView):
     """
 
@@ -26,7 +27,6 @@ class DeckView(APIView):
 
     def post(self, request):
         user = request.user
-        user.save()
 
         user_deck_count = Deck.objects.filter(user=user).count()
         if user_deck_count >= USER_DECK_LIMIT:
@@ -50,13 +50,22 @@ class DeckView(APIView):
         logger.info(cards_in_deck)
         DeckCard.objects.bulk_create(cards_in_deck)
 
+        # then add sideboard and sideboard cards
+
         return Response({"message": "Deck added!"}, status=status.HTTP_201_CREATED)
 
 
     def get(self, request):
-        deck_id = request.query_params['id']
-        cards = DeckCard.objects.filter(deck_id=deck_id)
-        return Response(serializers.serialize('json', cards ), status=status.HTTP_200_OK)
+        user = request.user
+
+        if 'name' in request.query_params:
+            deck_name = request.query_params['name']
+            decks = Deck.objects.filter(name=deck_name, user_id=user.id)
+        else:
+            decks = Deck.objects.filter(user_id=user.id)
+
+        decks_serialized = DeckSerializer(decks, many=True)
+        return Response(decks_serialized.data)
 
 class RegisterUserView(APIView):
     """

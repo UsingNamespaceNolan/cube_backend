@@ -1,13 +1,7 @@
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
-
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    
-    class Meta:
-        model = User
-        fields = ['url', 'username', 'email', 'groups', 'password']
-
+from cube_app.models import Deck
 
 class NewUserSerializer(serializers.HyperlinkedModelSerializer):
     password = serializers.CharField(write_only=True, max_length=50)
@@ -25,8 +19,7 @@ class NewUserSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['url', 'username', 'email', 'groups', 'password']
 
 
-
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
+class DeckSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Group
-        fields = ['url', 'name']
+        model = Deck
+        fields = ['id', 'name', 'user', 'private']
