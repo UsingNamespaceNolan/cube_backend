@@ -17,7 +17,6 @@ Including another URLconf
 from django.urls import include, path
 from rest_framework import routers
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
 
@@ -28,11 +27,11 @@ router = routers.DefaultRouter()
 urlpatterns = [
     path('api/set-csrf-cookie/', views.set_csrf_token, name='Set-CSRF'),
     path('', include(router.urls)),
-    path('user/', views.UserView.as_view(), name='user'),
+    path('api/current-user/', views.CurrentUserView.as_view(), name='current_user'),
     path('api/user/register/', views.RegisterUserView.as_view(), name='register'),
     path('api/login/', views.LoginView.as_view(), name='api_login'),
     path('api/logout/', views.LogoutView.as_view(), name='api_logout'),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/', views.TokenObtainPairWithUser.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/deck/', views.DeckView.as_view(), name='deck')
 ]

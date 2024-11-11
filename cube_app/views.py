@@ -8,13 +8,13 @@ from rest_framework.response import Response
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.exceptions import APIException
 from django.http import HttpResponse, JsonResponse
-from django.core import serializers
+from rest_framework_simplejwt.views import TokenObtainPairView
 import logging
 
 from cube_app.constants import USER_DECK_LIMIT
 
 from .models import Deck, DeckCard
-from .serializers import DeckSerializer, NewUserSerializer
+from .serializers import DeckSerializer, NewUserSerializer, TokenObtainPairSerializerWithUser, UserSerializer
 
 logger = logging.getLogger('cube_app')
 
@@ -81,21 +81,18 @@ class RegisterUserView(APIView):
             return Response(newUserSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserView(APIView):
+class CurrentUserView(APIView):
     """
-    View to list all users in the system.
-
-    * Requires JWT authentication.
-    * Only admin users are able to access this view.
+    Endpoint to query/update information about the current logged in user.
     """
     permission_classes = [IsAdminUser]
 
-    def get(self, request, format=None):
+    def get(self, request):
         """
-        Return a list of all users.
+        Returns the current logged in user
         """
-        usernames = [user.username for user in User.objects.all()]
-        return Response(usernames)
+        user_serialized = UserSerializer(request.user)
+        return Response(user_serialized)
     
 
 class LoginView(APIView):
@@ -130,6 +127,11 @@ class LogoutView(APIView):
         # blacklist token?
 
         return JsonResponse({"response": "Logout success"})
+    
+
+class TokenObtainPairWithUser(TokenObtainPairView):
+    serializer_class = TokenObtainPairSerializerWithUser
+
 
 
 @ensure_csrf_cookie
