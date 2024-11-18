@@ -74,9 +74,10 @@ class RegisterUserView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
         newUserSerializer = NewUserSerializer(data=request.data)
+
         if newUserSerializer.is_valid():
             newUserSerializer.save()
-            return Response({"message": "User registered successfully!"}, status=status.HTTP_201_CREATED)
+            return Response({ "message": "User registered successfully!" }, status=status.HTTP_201_CREATED)
         else:
             return Response(newUserSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -85,36 +86,13 @@ class CurrentUserView(APIView):
     """
     Endpoint to query/update information about the current logged in user.
     """
-    permission_classes = [IsAdminUser]
-
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         """
         Returns the current logged in user
         """
         user_serialized = UserSerializer(request.user)
-        return Response(user_serialized)
-    
-
-class LoginView(APIView):
-    """
-    
-    """
-    def post(self, request):
-        username = request.data['username']
-        password = request.data['password']
-
-        if username is None or password is None:
-            raise APIException(f"Provide valid credentials!")
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            print(user)
-            login(request, user)
-
-            return HttpResponse({"You're logged in"})
-        return JsonResponse(
-            {"detail": "Invalid credentials"},
-            status=400,
-        )
+        return Response(user_serialized.data)
     
 
 class LogoutView(APIView):

@@ -7,7 +7,7 @@ from cube_app.models import Deck
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username']
+        fields = ['id', 'username', 'email'] # map username to name ?
 
 class NewUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, max_length=50)
@@ -36,6 +36,7 @@ class TokenObtainPairSerializerWithUser(TokenObtainPairSerializer):
         data = super().validate(attrs)
 
         # Add your extra responses here
-        data['username'] = self.user.username
-        data['user_id'] = self.user.id
+        data['id'] = self.user.id
+        data['name'] = self.user.username
+        data['email'] = self.user.email
         return data
