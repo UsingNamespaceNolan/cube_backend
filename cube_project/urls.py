@@ -16,9 +16,7 @@ Including another URLconf
 """
 from django.urls import include, path
 from rest_framework import routers
-from rest_framework_simplejwt.views import (
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from cube_app import views
 
@@ -38,5 +36,10 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # Deck endpoints
-    path('api/deck/', views.DeckView.as_view(), name='deck')
+    path('api/decks/', views.DeckView.as_view(), name='deck'),
+    path('api/decks/public/', views.DeckViewPublic.as_view(), name='deck'),
+    path('api/decks/<int:deckId>/changes/', views.DeckChangeView.as_view(), name='deck_change'),
+
+    # Scryfall endpoints
+    path('api/scryfall/', views.ScryfallCardView.as_view(), name='scryfall_card'),
 ]

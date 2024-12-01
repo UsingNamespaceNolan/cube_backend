@@ -2,7 +2,8 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from cube_app.models import Deck
+from cube_app.models import Deck, DeckCard, DeckChange, ScryfallCard
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,7 +29,63 @@ class NewUserSerializer(serializers.ModelSerializer):
 class DeckSerializer(serializers.ModelSerializer):
     class Meta:
         model = Deck
-        fields = ['id', 'name', 'user', 'private']
+        fields = ['id', 'user', 'user_id', 'name', 'description', 'format', 'colors', 'private', 'featuredArtUrl']
+        depth = 1
+
+class DeckCardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeckCard
+        fields = ['id', 'deck', 'scryfallId', 'name', 'count', 'board']
+
+class DeckChangeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeckChange
+        fields = ['id', 'deck', 'name', 'count', 'board', 'timestamp']
+
+class ScryfallCardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScryfallCard
+        fields = [
+            'id',
+            'scryfallId',
+            'count',
+            'set',
+            'setName',
+            'collectorNumber',
+            'releasedAt',
+            'cardBackId',
+            'artist',
+            
+            'name',
+            'colors',
+            'colorIdentity',
+            'manaCost',
+            'cmc',
+            'rarity',
+            'typeLine',
+            'power',
+            'toughness',
+            'loyalty',
+            'defense',
+            'producedMana',
+            'oracleText',
+            'flavorText',
+            
+            'borderColor',
+            'frame',
+            'fullArt',
+            'promo',
+            'finishes',
+            'foil',
+            'nonfoil',
+            'lang',
+            
+            'imageURIs',
+            'faces',
+            'prices',
+            'priceUris',
+            'legalities',
+        ]
 
 
 class TokenObtainPairSerializerWithUser(TokenObtainPairSerializer):
