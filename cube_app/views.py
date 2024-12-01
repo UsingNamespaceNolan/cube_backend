@@ -71,7 +71,7 @@ class ScryfallCardView(APIView):
                     imageURIs=card.get('image_uris'),
                     faces=card.get('faces'),
                     prices=card.get('prices'),
-                    priceUris=card.get('price_uris'),
+                    priceUris=card.get('purchase_uris'),
                     legalities=card.get('legalities')
                 )
             )
