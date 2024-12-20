@@ -81,7 +81,7 @@ def createCardChanges(deck, newCards, changedCards, removedCards):
         deleteCardChanges.append(DeckChange(
             deck=deck,
             name=card.name,
-            count=card.count,
+            count=card.count * -1,
             board=card.board,
         ))
 

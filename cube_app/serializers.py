@@ -2,7 +2,8 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from cube_app.models import Deck, DeckCard, DeckChange, ScryfallCard
+from cube_app.models import (Deck, DeckCard, DeckChange, DeckDashboard,
+                             DeckFavorite, DeckView, ScryfallCard)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -27,9 +28,18 @@ class NewUserSerializer(serializers.ModelSerializer):
 
 
 class DeckSerializer(serializers.ModelSerializer):
+    favorites = serializers.SerializerMethodField()
+    views = serializers.SerializerMethodField()
+
+    def get_favorites(self, instance):
+        return DeckFavorite.objects.filter(deck=instance).count()
+    
+    def get_views(self, instance):
+        return DeckView.objects.filter(deck=instance).count()
+
     class Meta:
         model = Deck
-        fields = ['id', 'user', 'user_id', 'name', 'description', 'format', 'colors', 'private', 'featuredArtUrl']
+        fields = ['id', 'user', 'user_id', 'name', 'description', 'favorites', 'views', 'created', 'updated', 'format', 'colors', 'private', 'featuredArtUrl', 'commander']
         depth = 1
 
 class DeckCardSerializer(serializers.ModelSerializer):
@@ -37,16 +47,30 @@ class DeckCardSerializer(serializers.ModelSerializer):
         model = DeckCard
         fields = ['id', 'deck', 'scryfallId', 'name', 'count', 'board']
 
+class DeckDashboardSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeckDashboard
+        fields = ['sections']
+
 class DeckChangeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeckChange
         fields = ['id', 'deck', 'name', 'count', 'board', 'timestamp']
 
+class DeckFavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeckFavorite
+        fields = ['id', 'deck', 'user']
+
+class DeckViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeckView
+        fields = ['id', 'deck', 'user']
+
 class ScryfallCardSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScryfallCard
         fields = [
-            'id',
             'scryfallId',
             'count',
             'set',
@@ -85,6 +109,8 @@ class ScryfallCardSerializer(serializers.ModelSerializer):
             'prices',
             'priceUris',
             'legalities',
+            'relatedUris',
+            'allParts',
         ]
 
 
