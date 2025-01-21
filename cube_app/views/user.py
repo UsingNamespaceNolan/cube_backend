@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
@@ -12,6 +13,21 @@ from ..serializers import (NewUserSerializer,
                            TokenObtainPairSerializerWithUser, UserSerializer)
 
 logger = logging.getLogger('cube_app')
+
+class UserView(APIView):
+    """
+
+    """
+    def get(self, request, userId):
+        users = UserSerializer(User.objects.filter(id=userId), many=True).data
+
+        if len(users) == 0:
+            return Response({"message": "User not found!"}, status=status.HTTP_404_NOT_FOUND)
+        
+        elif len(users) > 1:
+            return Response({"message": "Multiple users found!"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(users[0])
 
 class RegisterUserView(APIView):
     """

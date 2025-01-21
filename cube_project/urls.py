@@ -18,12 +18,14 @@ from django.urls import include, path
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from cube_app import views
-from cube_app.views.deck import (DeckChangeView, DeckFavoriteView, DecksView,
-                                 DeckView, DeckViewsView, UserDeckView)
 from cube_app.views.scryfall import ScryfallCardView
+from cube_app.views.folders import FolderDecksView, FolderView, FoldersView
+from cube_app.views.deck import (DeckChangeView, DeckFavoriteView, DeckKitsLinkView, DecksView,
+                                 DeckView, DeckViewsView,
+                                 UserDeckFavoritesView, UserDeckView)
 from cube_app.views.user import (CurrentUserView, LogoutView, RegisterUserView,
-                                 TokenObtainPairWithUser, set_csrf_token)
+                                 TokenObtainPairWithUser, UserView,
+                                 set_csrf_token)
 
 router = routers.DefaultRouter()
 
@@ -35,6 +37,7 @@ urlpatterns = [
     path('api/users/current/', CurrentUserView.as_view(), name='current_user'),
     path('api/users/register/', RegisterUserView.as_view(), name='register'),
     path('api/users/logout/', LogoutView.as_view(), name='api_logout'),
+    path('api/users/<int:userId>/', UserView.as_view(), name='user'),
 
     # Token endpoints
     path('api/users/login/', TokenObtainPairWithUser.as_view(), name='token_obtain_pair'),
@@ -46,7 +49,14 @@ urlpatterns = [
     path('api/decks/<int:deckId>/changes/', DeckChangeView.as_view(), name='deck_change'),
     path('api/decks/<int:deckId>/favorites/', DeckFavoriteView.as_view(), name='deck_favorite'),
     path('api/decks/<int:deckId>/views/', DeckViewsView.as_view(), name='deck_views'),
-    path('api/user-decks/<int:userId>/', UserDeckView.as_view(), name='user_decks'),
+    path('api/decks/<int:deckId>/kits/', DeckKitsLinkView.as_view(), name='deck_kit'),
+    path('api/decks/user-decks/<int:userId>/', UserDeckView.as_view(), name='user_decks'),
+    path('api/decks/user-decks/<int:userId>/favorites/', UserDeckFavoritesView.as_view(), name='user_deck_favorites'),
+
+    # Folder endpoints
+    path('api/folders/<int:userId>/', FoldersView.as_view(), name='deck_folder'),
+    path('api/folders/<int:userId>/<int:folderId>/', FolderView.as_view(), name='deck_folder'),
+    path('api/folders/<int:userId>/<int:folderId>/<int:deckId>/', FolderDecksView.as_view(), name='user_deck'),
 
     # Scryfall endpoints
     path('api/scryfall/', ScryfallCardView.as_view(), name='scryfall_card'),

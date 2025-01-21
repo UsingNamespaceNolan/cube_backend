@@ -64,53 +64,60 @@ class ScryfallCardView(APIView):
                 )
             )
 
+        numCards = len(cardsToAdd)
+
         print('Creating cards...')
-        ScryfallCard.objects.bulk_create(
-            objs=cardsToAdd,
-            update_fields=[
-                'scryfallId',
-                'count',
-                'set',
-                'setName',
-                'collectorNumber',
-                'releasedAt',
-                'cardBackId',
-                'artist',
-                
-                'name',
-                'colors',
-                'colorIdentity',
-                'manaCost',
-                'cmc',
-                'rarity',
-                'typeLine',
-                'power',
-                'toughness',
-                'loyalty',
-                'defense',
-                'producedMana',
-                'oracleText',
-                'flavorText',
-                
-                'borderColor',
-                'frame',
-                'fullArt',
-                'promo',
-                'finishes',
-                'foil',
-                'nonfoil',
-                'lang',
-                
-                'imageURIs',
-                'faces',
-                'prices',
-                'priceUris',
-                'legalities',
-                'relatedUris',
-                'allParts',
-            ],
-            # update_conflicts=True,
-        )
+        for i in range(0, numCards, 100):
+            batchCardsToAdd = cardsToAdd[i:i+100]
+            ScryfallCard.objects.bulk_create(
+                objs=batchCardsToAdd,
+                update_fields=[
+                    'scryfallId',
+                    'count',
+                    'group',
+                    'set',
+                    'setName',
+                    'collectorNumber',
+                    'releasedAt',
+                    'cardBackId',
+                    'artist',
+                    
+                    'name',
+                    'colors',
+                    'colorIdentity',
+                    'manaCost',
+                    'cmc',
+                    'rarity',
+                    'typeLine',
+                    'power',
+                    'toughness',
+                    'loyalty',
+                    'defense',
+                    'producedMana',
+                    'oracleText',
+                    'flavorText',
+                    
+                    'borderColor',
+                    'frame',
+                    'fullArt',
+                    'promo',
+                    'finishes',
+                    'foil',
+                    'nonfoil',
+                    'lang',
+                    
+                    'imageURIs',
+                    'faces',
+                    'prices',
+                    'priceUris',
+                    'legalities',
+                    'relatedUris',
+                    'allParts',
+                ],
+                # update_conflicts=True,
+            )
+
+            print(f'Created {i+100}/{numCards}')
 
         print('Done!')
 

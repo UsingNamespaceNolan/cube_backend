@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from cube_app.models import (Deck, DeckCard, DeckChange, DeckDashboard,
-                             DeckFavorite, DeckView, ScryfallCard)
+                             DeckFavorite, Folder, DeckKitLink, DeckView, ScryfallCard)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -28,9 +28,25 @@ class NewUserSerializer(serializers.ModelSerializer):
 
 
 class DeckSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    commander = serializers.SerializerMethodField()
+    partner = serializers.SerializerMethodField()
     favorites = serializers.SerializerMethodField()
     views = serializers.SerializerMethodField()
 
+    def get_user(self, instance):
+        return UserSerializer(instance.user).data
+    
+    def get_commander(self, instance):
+        if instance.commander is None:
+            return None
+        return ScryfallCardSerializer(instance.commander).data
+    
+    def get_partner(self, instance):
+        if instance.partner is None:
+            return None
+        return ScryfallCardSerializer(instance.partner).data
+    
     def get_favorites(self, instance):
         return DeckFavorite.objects.filter(deck=instance).count()
     
@@ -39,13 +55,30 @@ class DeckSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Deck
-        fields = ['id', 'user', 'user_id', 'name', 'description', 'favorites', 'views', 'created', 'updated', 'format', 'colors', 'private', 'featuredArtUrl', 'commander']
-        depth = 1
+        fields = [
+            'id', 
+            'user', 
+            'user_id', 
+            'name', 
+            'description', 
+            'favorites', 
+            'views', 
+            'created', 
+            'updated', 
+            'format', 
+            'colors', 
+            'private', 
+            'featuredArtUrl', 
+            'commander', 
+            'partner', 
+            'isKit',
+            'inProgress',
+        ]
 
 class DeckCardSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeckCard
-        fields = ['id', 'deck', 'scryfallId', 'name', 'count', 'board']
+        fields = ['id', 'deck', 'scryfallId', 'name', 'count', 'group', 'board']
 
 class DeckDashboardSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,12 +100,32 @@ class DeckViewSerializer(serializers.ModelSerializer):
         model = DeckView
         fields = ['id', 'deck', 'user']
 
+class DeckKitLinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeckKitLink
+        fields = ['deck', 'kit']
+
+class FolderSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    deckIds = serializers.SerializerMethodField()
+
+    def get_deckIds(self, instance):
+        return instance.decks.values_list('id', flat=True)
+
+    def get_user(self, instance):
+        return UserSerializer(instance.user).data
+    
+    class Meta:
+        model = Folder
+        fields = ['id', 'deckIds', 'user', 'name', 'created', 'updated']
+
 class ScryfallCardSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScryfallCard
         fields = [
             'scryfallId',
             'count',
+            'group',
             'set',
             'setName',
             'collectorNumber',

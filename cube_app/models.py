@@ -6,6 +6,7 @@ class ScryfallCard(models.Model):
     # Card Info
     scryfallId = models.CharField(primary_key=True, max_length=512)
     count = models.IntegerField(default=0)
+    group = models.CharField(max_length=512, default=None, null=True)
     set = models.CharField(max_length=512, default=None, null=True)
     setName = models.CharField(max_length=512, default=None, null=True)
     collectorNumber = models.CharField(max_length=512, default=None, null=True)
@@ -26,7 +27,7 @@ class ScryfallCard(models.Model):
     loyalty = models.CharField(max_length=512, default=None, null=True)
     defense = models.CharField(max_length=512, default=None, null=True)
     producedMana = models.CharField(max_length=512, default=None, null=True)
-    oracleText = models.CharField(max_length=512, default=None, null=True)
+    oracleText = models.CharField(max_length=2048, default=None, null=True)
     flavorText = models.CharField(max_length=512, default=None, null=True)
 
     # Print Info
@@ -58,13 +59,17 @@ class Deck(models.Model):
     colors = models.CharField(max_length=512, default=None)
     featuredArtUrl = models.CharField(max_length=512, default=None)
     format = models.CharField(max_length=512, default=None)
-    commander = models.ForeignKey(ScryfallCard, default=None, blank=True, null=True, on_delete=models.DO_NOTHING)
+    commander = models.ForeignKey(ScryfallCard, default=None, blank=True, null=True, on_delete=models.DO_NOTHING, related_name='commander')
+    partner = models.ForeignKey(ScryfallCard, default=None, blank=True, null=True, on_delete=models.DO_NOTHING, related_name='partner')
+    isKit = models.BooleanField(default=False)
+    inProgress = models.BooleanField(default=False)
 
 class DeckCard(models.Model):
     deck = models.ForeignKey(Deck, default=None, on_delete=models.CASCADE)
     scryfallId = models.CharField(max_length=512, default=None)
     name = models.CharField(max_length=512, default=None)
     count = models.IntegerField(default=1)
+    group = models.CharField(max_length=512, default=None, null=True)
     board = models.CharField(max_length=512, default=None)
 
 class DeckDashboard(models.Model):
@@ -85,3 +90,14 @@ class DeckFavorite(models.Model):
 class DeckView(models.Model):
     deck = models.ForeignKey(Deck, default=None, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=None, on_delete=models.CASCADE, related_name='views')
+
+class DeckKitLink(models.Model):
+    deck = models.ForeignKey(Deck, default=None, on_delete=models.CASCADE, related_name='deck')
+    kit = models.ForeignKey(Deck, default=None, on_delete=models.CASCADE, related_name='kit')
+
+class Folder(models.Model):
+    name = models.CharField(max_length=512, default=None)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    decks = models.ManyToManyField(Deck, default=None, related_name='folders')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=None, on_delete=models.CASCADE, related_name='folders')

@@ -1,30 +1,40 @@
 
 from cube_app.models import DeckCard, DeckChange
 
+def updateDeckCardsFromRequest(request, deck):
+    cards = request.data.get('cards', [])
 
-def updateDeckCards(request, deck):
+    updateDeckCards(cards, deck)
+
+def updateDeckCards(deckCards, deck):
     cards = []
-    scryfallIds = set()
-    
-    for card in request.data['cards']:
-        if card['scryfallId'] not in scryfallIds:
-            cards.append(DeckCard(
-                deck=deck, 
-                scryfallId=card['scryfallId'], 
-                name=card['name'],
-                count=int(card['count']),
-                board=card['board'],
-            ))
+
+    for card in deckCards:
+        cards.append(DeckCard(
+            deck=deck, 
+            scryfallId=card['scryfallId'], 
+            name=card['name'],
+            count=int(card['count']),
+            group=card.get('group'), 
+            board=card['board'],
+        ))
 
     oldCards = list(DeckCard.objects.filter(deck=deck))
-    newCards, changedCards, modifiedCards, removedCards = getCardDifferences(deck, cards, oldCards)
 
-    DeckCard.objects.bulk_create(newCards)
-    DeckCard.objects.bulk_update(modifiedCards, ['count'])
-    deleteIds = [card.id for card in removedCards]
-    DeckCard.objects.filter(id__in=deleteIds).delete()
+    boards = ['main', 'side', 'maybe', 'acquire']
 
-    createCardChanges(deck, newCards, changedCards, removedCards)
+    for board in boards:
+        cardsInBoard = [card for card in cards if card.board == board]
+        oldCardsInBoard = [card for card in oldCards if card.board == board]
+
+        newCards, changedCards, modifiedCards, removedCards = getCardDifferences(deck, cardsInBoard, oldCardsInBoard)
+
+        DeckCard.objects.bulk_create(newCards)
+        DeckCard.objects.bulk_update(modifiedCards, ['scryfallId', 'count', 'group', 'board'])
+        deleteIds = [card.id for card in removedCards]
+        DeckCard.objects.filter(id__in=deleteIds).delete()
+
+        createCardChanges(deck, newCards, changedCards, removedCards)
 
 
 def getCardDifferences(deck, newCards, oldCards):
@@ -38,7 +48,7 @@ def getCardDifferences(deck, newCards, oldCards):
 
         for oldCard in oldCards:
             if newCard.name == oldCard.name:
-                if newCard.count != oldCard.count or newCard.scryfallId != oldCard.scryfallId:
+                if newCard.count != oldCard.count:
                     newCard.id = oldCard.id
                     modifiedCards.append(newCard)
                     changedCards.append(DeckChange(
@@ -47,6 +57,10 @@ def getCardDifferences(deck, newCards, oldCards):
                         count = newCard.count - oldCard.count,
                         board = newCard.board,
                     ))
+                elif newCard.group != oldCard.group or newCard.scryfallId != oldCard.scryfallId:
+                    newCard.id = oldCard.id
+                    modifiedCards.append(newCard)
+                    
                 foundCard = True
                 break
 
