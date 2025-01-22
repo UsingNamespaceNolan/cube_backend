@@ -18,7 +18,7 @@ class ScryfallCardView(APIView):
         index = 0
         cardsToAdd = []
         for card in cards:
-            print(index, 'Adding:', card['name'])
+            print(str(index) + ':', card['name'])
             index += 1
             cardsToAdd.append(
                 ScryfallCard(
@@ -68,9 +68,18 @@ class ScryfallCardView(APIView):
 
         print('Creating cards...')
         for i in range(0, numCards, 100):
-            batchCardsToAdd = cardsToAdd[i:i+100]
+            cardsToCreate = []
+            cardsToUpdate = []
+
+            for cardToAdd in cardsToAdd[i:i+100]:
+                card = ScryfallCard.objects.filter(scryfallId=cardToAdd.scryfallId)
+                if len(card) > 0:
+                    cardsToUpdate.append(card[0])
+                else:
+                    cardsToCreate.append(cardToAdd)
+
             ScryfallCard.objects.bulk_create(
-                objs=batchCardsToAdd,
+                objs=cardsToCreate,
                 update_fields=[
                     'scryfallId',
                     'count',
@@ -114,10 +123,14 @@ class ScryfallCardView(APIView):
                     'relatedUris',
                     'allParts',
                 ],
-                # update_conflicts=True,
             )
 
-            print(f'Created {i+100}/{numCards}')
+            ScryfallCard.objects.bulk_update(
+                objs=cardsToUpdate,
+                fields=['prices', 'priceUris']
+            )
+
+            print(f'Processed {i+100}/{numCards}')
 
         print('Done!')
 
