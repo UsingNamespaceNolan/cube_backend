@@ -1,15 +1,18 @@
+from copy import deepcopy
 from math import ceil
+
 from django.db.models import Count, Q
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from cube_app.constants import USER_DECK_LIMIT
 
-from ..models import Deck, DeckCard, DeckChange, DeckDashboard, DeckFavorite, Folder, DeckKitLink
+from ..models import (Deck, DeckCard, DeckChange, DeckDashboard, DeckFavorite,
+                      DeckKitLink)
 from ..models import DeckView as DeckViewModel
-from ..models import ScryfallCard
+from ..models import Folder, ScryfallCard
 from ..serializers import (DeckChangeSerializer, DeckDashboardSerializer,
                            DeckFavoriteSerializer, DeckSerializer,
                            DeckViewSerializer, ScryfallCardSerializer)
@@ -194,31 +197,55 @@ class DeckView(APIView):
         sideBoard = []
         maybeBoard = []
         acquireBoard = []
-        
-        for card in scryfallCards:
-            if deckCardCountsMappedById[card.scryfallId].board == 'main':
-                card.count = deckCardCountsMappedById[card.scryfallId].count
-                card.group = deckCardCountsMappedById[card.scryfallId].group
+
+        for card in deckCards:
+            if card.board == 'main':
                 mainBoard.append(card)
-            if deckCardCountsMappedById[card.scryfallId].board == 'side':
-                card.count = deckCardCountsMappedById[card.scryfallId].count
-                card.group = deckCardCountsMappedById[card.scryfallId].group
+            if card.board == 'side':
                 sideBoard.append(card)
-            if deckCardCountsMappedById[card.scryfallId].board == 'maybe':
-                card.count = deckCardCountsMappedById[card.scryfallId].count
-                card.group = deckCardCountsMappedById[card.scryfallId].group
+            if card.board == 'maybe':
                 maybeBoard.append(card)
-            if deckCardCountsMappedById[card.scryfallId].board == 'acquire':
-                card.count = deckCardCountsMappedById[card.scryfallId].count
-                card.group = deckCardCountsMappedById[card.scryfallId].group
+            if card.board == 'acquire':
                 acquireBoard.append(card)
+
+        scryfallCardsInMain = []
+        for card in mainBoard:
+            scryfallCard = scryfallCards.filter(scryfallId=card.scryfallId)[0]
+            scryfallCard.count = card.count
+            scryfallCard.group = card.group
+            scryfallCardsInMain.append(scryfallCard)
+        serializedMain = ScryfallCardSerializer(scryfallCardsInMain, many=True).data
+
+        scryfallCardsInSide = []
+        for card in sideBoard:
+            scryfallCard = scryfallCards.filter(scryfallId=card.scryfallId)[0]
+            scryfallCard.count = card.count
+            scryfallCard.group = card.group
+            scryfallCardsInSide.append(scryfallCard)
+        serializedSide = ScryfallCardSerializer(scryfallCardsInSide, many=True).data
+
+        scryfallCardsInMaybe = []
+        for card in maybeBoard:
+            scryfallCard = scryfallCards.filter(scryfallId=card.scryfallId)[0]
+            scryfallCard.count = card.count
+            scryfallCard.group = card.group
+            scryfallCardsInMaybe.append(scryfallCard)
+        serializedMaybe = ScryfallCardSerializer(scryfallCardsInMaybe, many=True).data
+
+        scryfallCardsInAcquire = []
+        for card in acquireBoard:
+            scryfallCard = scryfallCards.filter(scryfallId=card.scryfallId)[0]
+            scryfallCard.count = card.count
+            scryfallCard.group = card.group
+            scryfallCardsInAcquire.append(scryfallCard)
+        serializedAcquire = ScryfallCardSerializer(scryfallCardsInAcquire, many=True).data
 
         deck_with_cards = {
             "deck": deck.data[0],
-            "main": ScryfallCardSerializer(mainBoard, many=True).data,
-            "side": ScryfallCardSerializer(sideBoard, many=True).data,
-            "maybe": ScryfallCardSerializer(maybeBoard, many=True).data,
-            "acquire": ScryfallCardSerializer(acquireBoard, many=True).data,
+            "main": serializedMain,
+            "side": serializedSide,
+            "maybe": serializedMaybe,
+            "acquire": serializedAcquire,
             "dashboard": len(dashboard) > 0 and dashboard[0] or [],
             "favorites": len(favorites) or 0,
             "views": len(views) or 0
@@ -433,6 +460,17 @@ class UserDeckFavoritesView(APIView):
                 }, 
                 "data": decks 
             })
+        
+        return Response({ 
+                "meta": {
+                    "page": page,
+                    "items": items,
+
+                    "totalItems": 0,
+                    "totalPages": 0,
+                }, 
+                "data": [] 
+            }) 
 
 class DeckChangeView(APIView):
     """

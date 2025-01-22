@@ -1,6 +1,7 @@
 
 from cube_app.models import DeckCard, DeckChange
 
+
 def updateDeckCardsFromRequest(request, deck):
     cards = request.data.get('cards', [])
 
